@@ -219,3 +219,4 @@ def test_threads_clean_shutdown(tmp_path):
     assert not t_online.is_alive()
     assert not t_periodic.is_alive()
     assert not t_meshjoin.is_alive()
+

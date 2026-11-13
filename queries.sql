@@ -464,3 +464,4 @@ SELECT
     total_quantity
 FROM STORE_QUARTERLY_SALES
 ORDER BY store_name, year, quarter;
+

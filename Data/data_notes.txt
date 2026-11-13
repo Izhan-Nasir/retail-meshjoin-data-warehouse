@@ -78,3 +78,4 @@ Distribution:
   - Periodic Transactions (periodic_sales_data table): 117,538 rows
   - Periodic Groups: 48 groups staged across release_hour 0..47 (~2,449 rows/group)
   - Total Transactions: 392,692 rows
+

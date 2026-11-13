@@ -98,3 +98,4 @@ def test_q20_create_view_and_order_outside(sql_content):
     # Retrieval query should contain ORDER BY
     retrieval = text[text.find(";"):]
     assert "ORDER BY" in retrieval.upper()
+

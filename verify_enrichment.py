@@ -180,3 +180,4 @@ def run_verification(password: str = "8956"):
 if __name__ == "__main__":
     pw = sys.argv[1] if len(sys.argv) > 1 else "8956"
     run_verification(password=pw)
+

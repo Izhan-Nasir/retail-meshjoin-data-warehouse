@@ -147,3 +147,4 @@ def test_consolidator_in_memory_caching():
     assert consolidator.get_or_create_supplier(txn, cur=None) == 3
     assert consolidator.get_or_create_store(txn, cur=None) == 4
     assert consolidator.get_or_create_time(txn.event_time, cur=None) == 5
+

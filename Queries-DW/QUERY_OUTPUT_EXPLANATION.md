@@ -576,3 +576,4 @@ Birmingham Bullring  2011        1       34201.18           20364
   - Conforms strictly to Human Decision #12: Defined as an ordinary `CREATE VIEW STORE_QUARTERLY_SALES` without an internal `ORDER BY`, followed by sorted retrieval.
   - Edinburgh Princes leads physical retail revenue (£67.2k, 42k units), followed by London Bridge (£46.2k).
   - Online remains the flagship channel, generating over £510k in Q4 2010 and £460k in Q1 2011.
+

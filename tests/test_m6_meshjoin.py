@@ -298,3 +298,4 @@ def test_multi_transaction_same_customer_preserves_other():
     # Next iteration: T2 reaches age 3 and evicts
     engine.step()
     assert "101" not in engine.H_customer
+
