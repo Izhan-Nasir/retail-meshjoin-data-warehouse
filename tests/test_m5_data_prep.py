@@ -161,3 +161,4 @@ def test_invoice_level_mode_consistency():
     combined = pd.concat([online_df, periodic_df])
     grp = combined.groupby("transaction_id")["sales_mode"].nunique()
     assert (grp == 1).all(), "Invoice rows have inconsistent sales_mode"
+

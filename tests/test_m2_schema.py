@@ -163,3 +163,4 @@ def test_shed_table_columns(cursor):
     assert "flag"      in cols
     assert "shed_time" in cols
     assert "sales_mode" in cols
+

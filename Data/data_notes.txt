@@ -1,0 +1,80 @@
+================================================================================
+RETAIL MESHJOIN DATA WAREHOUSE — DATA NOTES & PROVENANCE
+================================================================================
+
+1. DATASET SOURCE & CITATION
+--------------------------------------------------------------------------------
+Dataset Name: Online Retail Dataset
+Repository:   UCI Machine Learning Repository
+URL:          https://archive.ics.uci.edu/dataset/352/online+retail
+Original Author: Dr. Daqing Chen, Director of Public Analytics Research Group,
+                 School of Engineering, London South Bank University, London UK.
+Download Date:   November 6, 2026 (Preserved in pristine, unedited state)
+Format:          Microsoft Excel (.xlsx), 22.6 MB
+File Location:   D:\University Semesters\7th Semester\DWHBI\Project\Online Retail.xlsx
+
+
+2. DATA CLEANING PIPELINE & AUDIT TRAIL
+--------------------------------------------------------------------------------
+The dataset underwent a 5-step sequential cleaning pipeline executed by cleaning.py.
+All steps were applied programmatically without manual alterations:
+
+Step 0: Initial Raw Ingestion
+  - Total records ingested:              541,909
+
+Step 1: Removal of Transactions with Invoices starting with 'C' (Cancellations)
+  - Cancelled transactions removed:        9,288
+  - Running total remaining:             532,621
+
+Step 2: Removal of Invalid Quantities (Quantity <= 0)
+  - Non-positive quantities removed:       1,336
+  - Running total remaining:             531,285
+
+Step 3: Removal of Invalid Unit Prices (UnitPrice <= 0.0)
+  - Non-positive prices removed:           1,181
+  - Running total remaining:             530,104
+
+Step 4: Removal of Missing Customer IDs (NaN / Null)
+  - Unidentified customer rows removed:  132,220
+  - Running total remaining:             397,884
+
+Step 5: Removal of Exact Duplicate Rows
+  - Exact duplicates removed:              5,192
+  - Final Cleaned Row Count:             392,692
+
+Audit Verification:
+  - 541,909 - 9,288 - 1,336 - 1,181 - 132,220 - 5,192 = 392,692 (100% matched)
+
+
+3. MASTER DATA GENERATION (DETERMINISTIC HASHING)
+--------------------------------------------------------------------------------
+Master data attributes were generated deterministically using MD5 hashes via stable():
+  stable(key, n) = int(MD5(utf-8(key))[:8], 16) % n
+
+Customer Master Data (customer_master_data.csv):
+  - Total Unique Customers: 4,338
+  - Partition Size: 500 tuples
+  - Number of Partitions: ceil(4,338 / 500) = 9 partitions
+  - Generated Attributes: gender, age_group, occupation, city_category,
+    stay_in_current_city_years, marital_status.
+
+Product Master Data (product_master_data.csv):
+  - Total Unique Products: 3,665
+  - Partition Size: 500 tuples
+  - Number of Partitions: ceil(3,665 / 500) = 8 partitions
+  - Generated Attributes: product_name (longest description), product_category,
+    supplier_id, supplier_name.
+
+
+4. STREAM PARTITIONING & SALES MODE SPLIT
+--------------------------------------------------------------------------------
+Sales mode was assigned deterministically at the cart (invoice) level:
+  hash = int(MD5(str(int(invoice_no)))[:8], 16) % 10
+  0 - 6 -> Online   (70.1% of transactions)
+  7 - 9 -> Periodic (29.9% of transactions)
+
+Distribution:
+  - Online Transactions (online_sales_stream.csv): 275,154 rows
+  - Periodic Transactions (periodic_sales_data table): 117,538 rows
+  - Periodic Groups: 48 groups staged across release_hour 0..47 (~2,449 rows/group)
+  - Total Transactions: 392,692 rows
