@@ -97,14 +97,16 @@ def run(
     online_csv: str = ONLINE_CSV,
     auto_quit_on_eof: bool = False,
 ) -> None:
-    # 1. Connect to Database
+    # 1. Connect to Database (separate connection per thread for safe concurrency)
     print(f"Connecting to MySQL at {host}:{port}/{database} ...")
-    conn = get_connection(host, port, database, user, password)
+    conn_main = get_connection(host, port, database, user, password)
+    conn_meshjoin = get_connection(host, port, database, user, password)
+    conn_periodic = get_connection(host, port, database, user, password)
     print("Connected successfully.")
 
     # 2. Initialize Components
     stream_buffer = StreamBuffer(capacity=STREAM_BUFFER_CAPACITY)
-    c_loader, p_loader, n_cust_parts, n_prod_parts = create_db_loaders(conn)
+    c_loader, p_loader, n_cust_parts, n_prod_parts = create_db_loaders(conn_meshjoin)
     engine = MeshJoinEngine(
         stream_buffer=stream_buffer,
         customer_loader=c_loader,
@@ -112,7 +114,7 @@ def run(
         num_customer_partitions=n_cust_parts,
         num_product_partitions=n_prod_parts,
     )
-    consolidator = DataConsolidator(conn)
+    consolidator = DataConsolidator(conn_meshjoin)
 
     # 3. Thread Synchronization Events & State
     stop_event = threading.Event()
@@ -137,7 +139,7 @@ def run(
     )
     periodic_thread = PeriodicThread(
         stream_buffer=stream_buffer,
-        conn=conn,
+        conn=conn_periodic,
         simulated_hour_seconds=SIMULATED_HOUR_SECONDS,
         enabled_event=periodic_enabled,
         stop_event=stop_event,
@@ -145,7 +147,7 @@ def run(
     meshjoin_thread = MeshJoinThread(
         engine=engine,
         output_callback=on_enriched_output,
-        conn=conn,
+        conn=conn_meshjoin,
         is_peak_func=lambda: is_peak,
         stop_event=stop_event,
     )
@@ -200,7 +202,7 @@ def run(
             elif cmd == "status":
                 print_status(
                     stream_buffer, engine, online_thread, periodic_thread,
-                    meshjoin_thread, is_peak, mode, conn=conn
+                    meshjoin_thread, is_peak, mode, conn=conn_main
                 )
 
             elif cmd == "quit":
@@ -220,7 +222,9 @@ def run(
         online_thread.join(timeout=3.0)
         periodic_thread.join(timeout=3.0)
         meshjoin_thread.join(timeout=3.0)
-        conn.close()
+        conn_main.close()
+        conn_meshjoin.close()
+        conn_periodic.close()
         print("Database connection closed. Runtime terminated cleanly.")
 
 

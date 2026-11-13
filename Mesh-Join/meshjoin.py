@@ -461,6 +461,8 @@ def create_db_loaders(conn, partition_size: int = PARTITION_SIZE):
     cur.close()
 
     def customer_loader(part_idx: int) -> List[Dict[str, Any]]:
+        if not conn.is_connected():
+            conn.reconnect()
         c = conn.cursor(dictionary=True)
         offset = part_idx * partition_size
         c.execute(
@@ -478,6 +480,8 @@ def create_db_loaders(conn, partition_size: int = PARTITION_SIZE):
         return rows
 
     def product_loader(part_idx: int) -> List[Dict[str, Any]]:
+        if not conn.is_connected():
+            conn.reconnect()
         c = conn.cursor(dictionary=True)
         offset = part_idx * partition_size
         c.execute(
