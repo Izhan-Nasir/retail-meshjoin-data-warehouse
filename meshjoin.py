@@ -134,46 +134,69 @@ class Transaction:
 class StreamBuffer:
     """
     Thread-safe bounded stream buffer with capacity limit (default 1000).
-    Supports blocking / non-blocking put and get operations.
+    Supports 3 priority levels:
+      - Priority 1: Online transactions (highest)
+      - Priority 2: Periodic transactions
+      - Priority 3: Shed-recovered transactions (lowest)
+    When draining, higher-priority transactions are always extracted before lower-priority ones.
     """
 
     def __init__(self, capacity: int = STREAM_BUFFER_CAPACITY):
         self.capacity = capacity
-        self._buffer: collections.deque[Transaction] = collections.deque()
+        self._p1: collections.deque[Transaction] = collections.deque()
+        self._p2: collections.deque[Transaction] = collections.deque()
+        self._p3: collections.deque[Transaction] = collections.deque()
         self._lock = threading.Lock()
         self._not_empty = threading.Condition(self._lock)
         self._not_full = threading.Condition(self._lock)
 
-    def put(self, item: Transaction, block: bool = True, timeout: Optional[float] = None) -> bool:
-        """Put a single transaction into the buffer."""
-        return bool(self.put_batch([item], block=block, timeout=timeout))
+    def _get_queue(self, priority: int) -> collections.deque[Transaction]:
+        if priority == 1:
+            return self._p1
+        elif priority == 2:
+            return self._p2
+        else:
+            return self._p3
+
+    def put(
+        self,
+        item: Transaction,
+        priority: int = 1,
+        block: bool = True,
+        timeout: Optional[float] = None,
+    ) -> bool:
+        """Put a single transaction into the buffer with given priority."""
+        return bool(self.put_batch([item], priority=priority, block=block, timeout=timeout))
 
     def put_batch(
         self,
         items: List[Transaction],
+        priority: int = 1,
         block: bool = True,
         timeout: Optional[float] = None,
     ) -> int:
         """
-        Put a batch of transactions into the buffer.
-        If block is True, waits until there is space for the items or timeout expires.
+        Put a batch of transactions into the buffer with given priority (1, 2, or 3).
+        If block is True, waits until there is space for at least 1 item or timeout expires.
         Returns number of items successfully placed into the buffer.
         """
         if not items:
             return 0
 
-        with self._lock:
-            if block:
-                # Wait until there is space for at least 1 item
-                while len(self._buffer) >= self.capacity:
-                    if not self._not_full.wait(timeout=timeout):
-                        return 0  # Timed out
+        target_queue = self._get_queue(priority)
 
-            # Determine how many can be accommodated
-            available = self.capacity - len(self._buffer)
-            to_add = items[:available] if not block else items[:available]
+        with self._lock:
+            current_total = len(self._p1) + len(self._p2) + len(self._p3)
+            if block:
+                while current_total >= self.capacity:
+                    if not self._not_full.wait(timeout=timeout):
+                        return 0
+                    current_total = len(self._p1) + len(self._p2) + len(self._p3)
+
+            available = max(0, self.capacity - current_total)
+            to_add = items[:available]
             for item in to_add:
-                self._buffer.append(item)
+                target_queue.append(item)
 
             if to_add:
                 self._not_empty.notify_all()
@@ -181,36 +204,43 @@ class StreamBuffer:
 
     def get_batch(self, max_items: int) -> List[Transaction]:
         """
-        Get up to max_items from the buffer without blocking.
+        Get up to max_items in priority order (P1 -> P2 -> P3) without blocking.
         Returns empty list if buffer is empty.
         """
         with self._lock:
-            count = min(max_items, len(self._buffer))
-            if count == 0:
-                return []
-            items = [self._buffer.popleft() for _ in range(count)]
-            self._not_full.notify_all()
-            return items
+            extracted: List[Transaction] = []
+            while self._p1 and len(extracted) < max_items:
+                extracted.append(self._p1.popleft())
+            while self._p2 and len(extracted) < max_items:
+                extracted.append(self._p2.popleft())
+            while self._p3 and len(extracted) < max_items:
+                extracted.append(self._p3.popleft())
+
+            if extracted:
+                self._not_full.notify_all()
+            return extracted
 
     def size(self) -> int:
-        """Current number of items in the buffer."""
+        """Current total number of items in the buffer across all priorities."""
         with self._lock:
-            return len(self._buffer)
+            return len(self._p1) + len(self._p2) + len(self._p3)
 
     def is_full(self) -> bool:
-        """True if buffer reached or exceeded capacity."""
+        """True if total items reached or exceeded capacity."""
         with self._lock:
-            return len(self._buffer) >= self.capacity
+            return (len(self._p1) + len(self._p2) + len(self._p3)) >= self.capacity
 
     def is_empty(self) -> bool:
-        """True if buffer has 0 items."""
+        """True if buffer has 0 items across all priorities."""
         with self._lock:
-            return len(self._buffer) == 0
+            return (len(self._p1) + len(self._p2) + len(self._p3)) == 0
 
     def clear(self) -> None:
         """Clear all items from the buffer."""
         with self._lock:
-            self._buffer.clear()
+            self._p1.clear()
+            self._p2.clear()
+            self._p3.clear()
             self._not_full.notify_all()
 
 
