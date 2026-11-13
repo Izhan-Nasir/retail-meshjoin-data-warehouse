@@ -148,12 +148,12 @@ class DataConsolidator:
             sql,
             (
                 cid,
-                txn.gender,
-                txn.age_group,
-                txn.occupation,
-                txn.city_category,
-                txn.stay_in_current_city_years,
-                txn.marital_status,
+                txn.gender or "Other",
+                txn.age_group or "Unknown",
+                txn.occupation or "Other",
+                txn.city_category or "B",
+                txn.stay_in_current_city_years or "1",
+                txn.marital_status or "Single",
             ),
         )
         key = cur.lastrowid

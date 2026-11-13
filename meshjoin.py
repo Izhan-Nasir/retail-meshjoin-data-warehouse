@@ -450,13 +450,44 @@ def create_db_loaders(conn, partition_size: int = PARTITION_SIZE):
     from MySQL customer_master_data and product_master_data tables.
     Never loads entire master data tables into memory.
     """
+    import csv
+    import os
+    from config import CUSTOMER_MD_CSV, PRODUCT_MD_CSV
+
     cur = conn.cursor(dictionary=True)
     cur.execute("SELECT COUNT(*) AS cnt FROM customer_master_data")
     n_cust = cur.fetchone()["cnt"]
-    num_cust_parts = math.ceil(n_cust / partition_size) if n_cust > 0 else 1
+
+    if n_cust == 0 and os.path.exists(CUSTOMER_MD_CSV):
+        print(f"[create_db_loaders] Loading customer_master_data from {CUSTOMER_MD_CSV} ...")
+        with open(CUSTOMER_MD_CSV, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            c_rows = [(r["customer_id"], r["gender"], r["age_group"], r["occupation"], r["city_category"], r["stay_in_current_city_years"], r["marital_status"]) for r in reader]
+            cur.executemany("""
+                INSERT IGNORE INTO customer_master_data
+                (customer_id, gender, age_group, occupation, city_category, stay_in_current_city_years, marital_status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, c_rows)
+            conn.commit()
+            n_cust = len(c_rows)
 
     cur.execute("SELECT COUNT(*) AS cnt FROM product_master_data")
     n_prod = cur.fetchone()["cnt"]
+
+    if n_prod == 0 and os.path.exists(PRODUCT_MD_CSV):
+        print(f"[create_db_loaders] Loading product_master_data from {PRODUCT_MD_CSV} ...")
+        with open(PRODUCT_MD_CSV, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            p_rows = [(r["product_id"], r["product_name"], r["product_category"], r["supplier_id"], r["supplier_name"]) for r in reader]
+            cur.executemany("""
+                INSERT IGNORE INTO product_master_data
+                (product_id, product_name, product_category, supplier_id, supplier_name)
+                VALUES (%s, %s, %s, %s, %s)
+            """, p_rows)
+            conn.commit()
+            n_prod = len(p_rows)
+
+    num_cust_parts = math.ceil(n_cust / partition_size) if n_cust > 0 else 1
     num_prod_parts = math.ceil(n_prod / partition_size) if n_prod > 0 else 1
     cur.close()
 
