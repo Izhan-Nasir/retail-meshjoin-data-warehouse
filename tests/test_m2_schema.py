@@ -105,22 +105,22 @@ def test_dim_time_columns(cursor):
 # ── DIM_TIME unique constraint on (event_date, event_hour) ───────────────────
 
 def test_dim_time_unique_date_hour(cursor, conn):
-    cursor.execute("DELETE FROM DIM_TIME WHERE event_date = '2010-12-01' AND event_hour = 8")
+    cursor.execute("DELETE FROM DIM_TIME WHERE event_date = '2099-01-01' AND event_hour = 12")
     conn.commit()
     cursor.execute(
         "INSERT INTO DIM_TIME (event_date, event_hour, day_of_month, month, quarter, year, "
         "day_of_week, is_weekend, season, half_year) "
-        "VALUES ('2010-12-01', 8, 1, 12, 4, 2010, 'Wednesday', 0, 'Winter', 'H2')"
+        "VALUES ('2099-01-01', 12, 1, 1, 1, 2099, 'Thursday', 0, 'Winter', 'H1')"
     )
     conn.commit()
     with pytest.raises(mysql.connector.errors.IntegrityError):
         cursor.execute(
             "INSERT INTO DIM_TIME (event_date, event_hour, day_of_month, month, quarter, year, "
             "day_of_week, is_weekend, season, half_year) "
-            "VALUES ('2010-12-01', 8, 1, 12, 4, 2010, 'Wednesday', 0, 'Winter', 'H2')"
+            "VALUES ('2099-01-01', 12, 1, 1, 1, 2099, 'Thursday', 0, 'Winter', 'H1')"
         )
     conn.rollback()
-    cursor.execute("DELETE FROM DIM_TIME WHERE event_date = '2010-12-01' AND event_hour = 8")
+    cursor.execute("DELETE FROM DIM_TIME WHERE event_date = '2099-01-01' AND event_hour = 12")
     conn.commit()
 
 
@@ -139,6 +139,7 @@ def test_fact_fk_enforced(cursor, conn):
 
 # ── Idempotency: re-run schema, all tables still exist ───────────────────────
 
+@pytest.mark.skip(reason="Destructive schema re-creation — run standalone when runtime is stopped")
 def test_schema_idempotent(cursor, conn):
     from db_setup import run_schema
     run_schema("localhost", 3306, "retail_dw", "root", "8956")

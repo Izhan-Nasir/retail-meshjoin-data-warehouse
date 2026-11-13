@@ -139,16 +139,16 @@ def stage_periodic(periodic_df, conn) -> int:
     """
 
     batch = []
-    for i, (_, row) in enumerate(df.iterrows()):
+    for i, row in enumerate(df.itertuples(index=False)):
         release_hour = min(i // group_size, NUM_PERIODIC_GROUPS - 1)
         batch.append((
-            str(row["transaction_id"]),
-            str(int(row["customer_id"])),
-            str(row["product_id"]),
-            int(row["quantity"]),
-            float(row["unit_price"]),
-            row["event_time"].strftime("%Y-%m-%d %H:%M:%S"),
-            row["sales_mode"],
+            str(row.transaction_id),
+            str(int(row.customer_id)),
+            str(row.product_id),
+            int(row.quantity),
+            float(row.unit_price),
+            row.event_time.strftime("%Y-%m-%d %H:%M:%S") if hasattr(row.event_time, 'strftime') else str(row.event_time),
+            row.sales_mode,
             release_hour,
             False,
         ))
