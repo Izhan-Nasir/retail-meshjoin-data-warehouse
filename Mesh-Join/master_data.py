@@ -101,8 +101,9 @@ def build_product_md(df):
     product_name = longest description per product_id; ties -> first in file order.
     """
     # Collect all descriptions per product in file order
+    desc_col = "product_name" if "product_name" in df.columns else "description"
     product_descs: dict = {}
-    for pid_raw, desc_raw in zip(df["product_id"], df["description"]):
+    for pid_raw, desc_raw in zip(df["product_id"], df[desc_col]):
         pid = str(pid_raw)
         desc = str(desc_raw).strip() if desc_raw and str(desc_raw).strip() else ""
         if pid not in product_descs:
