@@ -160,17 +160,17 @@ class DataConsolidator:
         self.customer_cache[cid] = key
         return key
 
-    def get_or_create_product(self, txn: Transaction, cur) -> int:
+    def get_or_create_product(self, txn: Transaction, supplier_key: int = 1, cur=None) -> int:
         pid = str(txn.product_id)
         if pid in self.product_cache:
             return self.product_cache[pid]
 
         sql = """
-            INSERT INTO DIM_PRODUCT (product_id, product_name, product_category)
-            VALUES (%s, %s, %s)
+            INSERT INTO DIM_PRODUCT (product_id, product_name, product_category, supplier_key)
+            VALUES (%s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE product_key = LAST_INSERT_ID(product_key)
         """
-        cur.execute(sql, (pid, txn.product_name or "UNKNOWN", txn.product_category or "Other"))
+        cur.execute(sql, (pid, txn.product_name or "UNKNOWN", txn.product_category or "Other", supplier_key))
         key = cur.lastrowid
         self.product_cache[pid] = key
         return key
@@ -253,8 +253,8 @@ class DataConsolidator:
 
         for txn in transactions:
             c_key = self.get_or_create_customer(txn, cur)
-            p_key = self.get_or_create_product(txn, cur)
             s_key = self.get_or_create_supplier(txn, cur)
+            p_key = self.get_or_create_product(txn, s_key, cur)
             st_key = self.get_or_create_store(txn, cur)
             t_key = self.get_or_create_time(txn.event_time, cur)
 
