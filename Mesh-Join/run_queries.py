@@ -12,7 +12,7 @@ import sys
 import pandas as pd
 import mysql.connector
 
-from config import DB_CONFIG, get_connection
+from config import get_connection
 
 QUERIES_FILE = "queries.sql"
 OUTPUT_FILE = "query_results.txt"
@@ -101,3 +101,4 @@ def run_all_queries(password):
 if __name__ == "__main__":
     pw = getpass.getpass("MySQL root password: ")
     run_all_queries(pw)
+
