@@ -67,6 +67,10 @@ def print_status(
     cur = conn.cursor() if conn else None
     fact_cnt = 0
     if cur:
+        try:
+            conn.commit()
+        except Exception:
+            pass
         cur.execute("SELECT COUNT(*) FROM FACT_SALES")
         fact_cnt = cur.fetchone()[0]
         cur.close()
@@ -100,6 +104,7 @@ def run(
     # 1. Connect to Database (separate connection per thread for safe concurrency)
     print(f"Connecting to MySQL at {host}:{port}/{database} ...")
     conn_main = get_connection(host, port, database, user, password)
+    conn_main.autocommit = True
     conn_meshjoin = get_connection(host, port, database, user, password)
     conn_periodic = get_connection(host, port, database, user, password)
     print("Connected successfully.")
