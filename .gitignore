@@ -1,0 +1,39 @@
+# Retail MESHJOIN Data Warehouse — .gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Environment / credentials
+.env
+*.env
+
+# Dataset (too large for Git)
+*.xlsx
+*.xls
+
+# Temporary / generated data files
+*.log
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
