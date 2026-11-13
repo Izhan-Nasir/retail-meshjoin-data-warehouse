@@ -48,7 +48,7 @@ def print_banner(mode: str, is_peak: bool, online_csv: str) -> None:
     print(f"  Peak Rate / Non-Peak Rate: {PEAK_RATE} tx/s / {NON_PEAK_RATE} tx/s")
     print(f"  Active Stream Mode       : {mode.upper()}")
     print("-" * 70)
-    print("Commands: [online | periodic | both | peak | non-peak | status | quit]")
+    print("Commands: [online | periodic | both | peak | non-peak | rate <N> | status | quit]")
     print("=" * 70)
 
 
@@ -100,6 +100,7 @@ def run(
     password: str = "",
     online_csv: str = ONLINE_CSV,
     auto_quit_on_eof: bool = False,
+    initial_rate: Optional[int] = None,
 ) -> None:
     # 1. Connect to Database (separate connection per thread for safe concurrency)
     print(f"Connecting to MySQL at {host}:{port}/{database} ...")
@@ -128,7 +129,8 @@ def run(
     periodic_enabled = threading.Event()
     periodic_enabled.set()
 
-    is_peak = True
+    effective_rate = initial_rate if (initial_rate is not None and initial_rate > 0) else PEAK_RATE
+    is_peak = (effective_rate >= 50)
     mode = "both"
 
     def on_enriched_output(batch):
@@ -138,7 +140,7 @@ def run(
     online_thread = OnlineThread(
         stream_buffer=stream_buffer,
         csv_path=online_csv,
-        rate=PEAK_RATE,
+        rate=effective_rate,
         enabled_event=online_enabled,
         stop_event=stop_event,
     )
@@ -204,6 +206,20 @@ def run(
                 online_thread.set_rate(NON_PEAK_RATE)
                 print(f">> Mode set to NON-PEAK ({NON_PEAK_RATE} tx/sec). Shed recovery active.")
 
+            elif cmd.startswith("rate"):
+                parts = cmd.split()
+                if len(parts) == 2 and parts[1].isdigit():
+                    new_r = int(parts[1])
+                    if new_r < 1:
+                        print(">> Arrival rate must be at least 1 tx/sec.")
+                    else:
+                        online_thread.set_rate(new_r)
+                        is_peak = (new_r >= 50)
+                        mode_str = "PEAK (load shedding active)" if is_peak else "NON-PEAK (shed recovery active)"
+                        print(f">> Dynamic arrival rate set to {new_r} tx/sec — {mode_str}.")
+                else:
+                    print("Usage: rate <number>  (e.g., rate 100, rate 25, rate 5)")
+
             elif cmd == "status":
                 print_status(
                     stream_buffer, engine, online_thread, periodic_thread,
@@ -219,7 +235,7 @@ def run(
                 continue
 
             else:
-                print(f"Unknown command: '{cmd}'. Available: online, periodic, both, peak, non-peak, status, quit")
+                print(f"Unknown command: '{cmd}'. Available: online, periodic, both, peak, non-peak, rate <N>, status, quit")
 
     finally:
         stop_event.set()
@@ -244,5 +260,7 @@ if __name__ == "__main__":
     u = input("Username [root]: ").strip() or "root"
     pw = getpass.getpass("Password: ")
     csv_file = input(f"Online CSV path [{ONLINE_CSV}]: ").strip() or ONLINE_CSV
+    r_prompt = input(f"Initial online arrival rate (tx/sec) [{PEAK_RATE}]: ").strip()
+    init_rate = int(r_prompt) if r_prompt.isdigit() and int(r_prompt) > 0 else PEAK_RATE
 
-    run(host=h, port=p, database=d, user=u, password=pw, online_csv=csv_file)
+    run(host=h, port=p, database=d, user=u, password=pw, online_csv=csv_file, initial_rate=init_rate)
