@@ -13,7 +13,7 @@ import pathlib
 import mysql.connector
 
 
-SCHEMA_FILE = pathlib.Path(__file__).parent / "schema.sql"
+SCHEMA_FILE = pathlib.Path(__file__).parent / "Create-DW" / "schema.sql" if (pathlib.Path(__file__).parent / "Create-DW" / "schema.sql").exists() else pathlib.Path(__file__).parent / "schema.sql"
 
 
 def run_schema(host, port, database, user, password):

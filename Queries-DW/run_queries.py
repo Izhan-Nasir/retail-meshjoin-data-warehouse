@@ -14,8 +14,11 @@ import mysql.connector
 
 from config import get_connection
 
-QUERIES_FILE = "queries.sql"
-OUTPUT_FILE = "query_results.txt"
+import pathlib
+
+_CURRENT_DIR = pathlib.Path(__file__).resolve().parent
+QUERIES_FILE = str(_CURRENT_DIR / "queries.sql")
+OUTPUT_FILE = str(_CURRENT_DIR / "query_results.txt")
 
 
 def parse_queries(filepath=QUERIES_FILE):

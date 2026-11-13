@@ -34,10 +34,22 @@ STORE_LIST = {
 # Default dataset location (relative to project root — not inside the repo)
 DATASET_PATH = r"D:\University Semesters\7th Semester\DWHBI\Project\Online Retail.xlsx"
 
-DATA_DIR = "Data"
-ONLINE_CSV = "Data/online_sales_stream.csv"
-CUSTOMER_MD_CSV = "Data/customer_master_data.csv"
-PRODUCT_MD_CSV = "Data/product_master_data.csv"
+import os
+import pathlib
+
+# Resolve DATA_DIR whether running from repository root or inside Mesh-Join/
+_CURRENT_DIR = pathlib.Path(__file__).resolve().parent
+if (_CURRENT_DIR / "Data").exists():
+    _BASE_DIR = _CURRENT_DIR
+elif (_CURRENT_DIR.parent / "Data").exists():
+    _BASE_DIR = _CURRENT_DIR.parent
+else:
+    _BASE_DIR = _CURRENT_DIR
+
+DATA_DIR = str(_BASE_DIR / "Data")
+ONLINE_CSV = str(_BASE_DIR / "Data" / "online_sales_stream.csv")
+CUSTOMER_MD_CSV = str(_BASE_DIR / "Data" / "customer_master_data.csv")
+PRODUCT_MD_CSV = str(_BASE_DIR / "Data" / "product_master_data.csv")
 
 
 # ── DB Connection Helper ──────────────────────────────────────────────────────

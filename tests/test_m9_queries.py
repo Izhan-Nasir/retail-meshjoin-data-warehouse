@@ -11,7 +11,9 @@ import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-QUERIES_FILE = os.path.join(os.path.dirname(__file__), "..", "queries.sql")
+_Q1 = os.path.join(os.path.dirname(__file__), "..", "Queries-DW", "queries.sql")
+_Q2 = os.path.join(os.path.dirname(__file__), "..", "queries.sql")
+QUERIES_FILE = _Q1 if os.path.exists(_Q1) else _Q2
 
 
 @pytest.fixture(scope="module")

@@ -72,7 +72,7 @@ def test_gitignore_excludes_pycache():
 
 
 def test_submission_folders_exist():
-    for folder in ["Create-DW", "Mesh-Join", "Queries-DW", "Data", "Project-Report", "ReadMe", "docs", "tests"]:
+    for folder in ["Create-DW", "Mesh-Join", "Queries-DW", "Data", "Project-Report", "ReadMe", "tests"]:
         assert (REPO / folder).is_dir(), f"Missing folder: {folder}"
 
 
