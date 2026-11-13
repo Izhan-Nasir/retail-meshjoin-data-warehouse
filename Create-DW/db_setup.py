@@ -72,7 +72,10 @@ def _prompt_credentials():
     database = input("Database name  [retail_dw]: ").strip() or "retail_dw"
     user     = input("MySQL user     [root]:     ").strip() or "root"
     import getpass
-    password = getpass.getpass("MySQL password: ")
+    if sys.stdin.isatty():
+        password = getpass.getpass("MySQL password: ")
+    else:
+        password = sys.stdin.readline().strip()
     return host, port, database, user, password
 
 

@@ -78,9 +78,10 @@ def test_submission_folders_exist():
 
 def test_source_stubs_exist():
     for f in ["config.py", "cleaning.py", "master_data.py", "data_prep.py",
-              "db_setup.py", "meshjoin.py", "threads.py", "shedding.py",
+              "meshjoin.py", "threads.py", "shedding.py",
               "consolidation.py", "runtime.py"]:
-        assert (REPO / f).exists(), f"Missing stub: {f}"
+        assert (REPO / "Mesh-Join" / f).exists() or (REPO / f).exists(), f"Missing stub: {f}"
+    assert (REPO / "Create-DW" / "db_setup.py").exists() or (REPO / "db_setup.py").exists()
 
 
 def test_requirements_txt_exists():

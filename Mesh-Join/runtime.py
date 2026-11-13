@@ -17,9 +17,14 @@ from __future__ import annotations
 
 import getpass
 import os
+import pathlib
 import sys
 import threading
 import time
+
+_DIR = pathlib.Path(__file__).resolve().parent
+if str(_DIR) not in sys.path:
+    sys.path.insert(0, str(_DIR))
 
 from config import (
     NON_PEAK_RATE,
@@ -258,7 +263,10 @@ if __name__ == "__main__":
     p = int(p_str)
     d = input("Database name [retail_dw]: ").strip() or "retail_dw"
     u = input("Username [root]: ").strip() or "root"
-    pw = getpass.getpass("Password: ")
+    if sys.stdin.isatty():
+        pw = getpass.getpass("Password: ")
+    else:
+        pw = sys.stdin.readline().strip()
     csv_file = input(f"Online CSV path [{ONLINE_CSV}]: ").strip() or ONLINE_CSV
     r_prompt = input(f"Initial online arrival rate (tx/sec) [{PEAK_RATE}]: ").strip()
     init_rate = int(r_prompt) if r_prompt.isdigit() and int(r_prompt) > 0 else PEAK_RATE

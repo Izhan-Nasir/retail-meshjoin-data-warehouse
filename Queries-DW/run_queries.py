@@ -7,16 +7,19 @@ formatted result tables in the terminal, and exports results to query_results.tx
 
 import getpass
 import os
+import pathlib
 import re
 import sys
 import pandas as pd
 import mysql.connector
 
+_CURRENT_DIR = pathlib.Path(__file__).resolve().parent
+_REPO_ROOT = _CURRENT_DIR.parent
+if str(_REPO_ROOT / "Mesh-Join") not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT / "Mesh-Join"))
+
 from config import get_connection
 
-import pathlib
-
-_CURRENT_DIR = pathlib.Path(__file__).resolve().parent
 QUERIES_FILE = str(_CURRENT_DIR / "queries.sql")
 OUTPUT_FILE = str(_CURRENT_DIR / "query_results.txt")
 
@@ -102,6 +105,9 @@ def run_all_queries(password):
 
 
 if __name__ == "__main__":
-    pw = getpass.getpass("MySQL root password: ")
+    if sys.stdin.isatty():
+        pw = getpass.getpass("MySQL root password: ")
+    else:
+        pw = sys.stdin.readline().strip()
     run_all_queries(pw)
 
