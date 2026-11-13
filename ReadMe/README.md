@@ -1,5 +1,13 @@
 # Retail Chain Near-Real-Time & Periodic Data Warehouse
 
+**Student Name:** Izhan Nasir  
+**Roll Number:** 23i-2517  
+**Course:** Data Warehouse and Business intelligence  
+**Academic Semester:** 7th Semester  
+**GitHub Repository:** [retail-meshjoin-data-warehouse](https://github.com/Izhan-Nasir/retail-meshjoin-data-warehouse.git)  
+
+---
+
 A university practical project implementing a near-real-time streaming and periodic Data Warehouse for a multinational retail chain using **Python 3.14**, **MySQL 8.0**, and the **MESHJOIN (Mesh Join)** stream-table join algorithm.
 
 ---

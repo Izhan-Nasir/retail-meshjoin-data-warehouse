@@ -1,5 +1,13 @@
 # Comprehensive Guide & Business Interpretation of OLAP Query Outputs (Q1 – Q20)
 
+**Student Name:** Izhan Nasir  
+**Roll Number:** 23i-2517  
+**Course:** Data Warehouse and Business intelligence  
+**Academic Semester:** 7th Semester  
+**GitHub Repository:** [retail-meshjoin-data-warehouse](https://github.com/Izhan-Nasir/retail-meshjoin-data-warehouse.git)  
+
+---
+
 This document provides a detailed, plain-English breakdown of all 20 analytical queries executed on the **`retail_dw`** Data Warehouse. For every query, it explains:
 1. **The Business Question:** What management or merchandising problem is being solved?
 2. **Column Definitions:** What each column in the output represents.
@@ -576,3 +584,4 @@ Birmingham Bullring  2011        1       34201.18           20364
   - Conforms strictly to Human Decision #12: Defined as an ordinary `CREATE VIEW STORE_QUARTERLY_SALES` without an internal `ORDER BY`, followed by sorted retrieval.
   - Edinburgh Princes leads physical retail revenue (£67.2k, 42k units), followed by London Bridge (£46.2k).
   - Online remains the flagship channel, generating over £510k in Q4 2010 and £460k in Q1 2011.
+

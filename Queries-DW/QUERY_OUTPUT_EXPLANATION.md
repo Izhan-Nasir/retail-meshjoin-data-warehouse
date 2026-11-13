@@ -1,5 +1,13 @@
 # Comprehensive Guide & Business Interpretation of OLAP Query Outputs (Q1 – Q20)
 
+**Student Name:** Izhan Nasir  
+**Roll Number:** 23i-2517  
+**Course:** Data Warehouse and Business intelligence  
+**Academic Semester:** 7th Semester  
+**GitHub Repository:** [retail-meshjoin-data-warehouse](https://github.com/Izhan-Nasir/retail-meshjoin-data-warehouse.git)  
+
+---
+
 This document provides a detailed, plain-English breakdown of all 20 analytical queries executed on the **`retail_dw`** Data Warehouse. For every query, it explains:
 1. **The Business Question:** What management or merchandising problem is being solved?
 2. **Column Definitions:** What each column in the output represents.

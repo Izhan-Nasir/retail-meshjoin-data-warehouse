@@ -1,6 +1,8 @@
 # Building and Analysing a Near-Real-Time and Periodic Data Warehouse for a Retail Chain
 
-**Course:** Data Warehousing & Business Intelligence (DWHBI)  
+**Student Name:** Izhan Nasir  
+**Roll Number:** 23i-2517  
+**Course:** Data Warehouse and Business intelligence  
 **Academic Semester:** 7th Semester  
 **Implementation Platform:** Python 3.14.1, MySQL Community Server 8.0.46, Windows 11  
 **GitHub Repository:** [retail-meshjoin-data-warehouse](https://github.com/Izhan-Nasir/retail-meshjoin-data-warehouse.git)  
@@ -227,19 +229,35 @@ The consolidation module (`consolidation.py`) transforms enriched stream objects
 
 ## 8. Summary of OLAP Analytical Queries (Q1–Q20)
 
-The SQL script `queries.sql` implements 20 sophisticated analytical queries:
-- **Q1 vs. Q11 (Human Decision #4):** Q1 identifies the global top-5 revenue products across the full year and performs monthly drill-downs split by weekday/weekend. Q11 recalculates the top-5 products dynamically for *each individual month*.
-- **Q2, Q3, Q4, Q10:** Multi-dimensional demographic aggregations across gender, age brackets, occupation, and temporal quarters.
-- **Q5 & Q8:** Window function ranking (`ROW_NUMBER()` and `RANK()`) across product categories and cities.
-- **Q6:** Date-bounded filtering analyzing the last 6 months (July–December 2011).
-- **Q7 & Q14:** Average transaction values and seasonal product performance.
-- **Q9, Q12, Q15:** Financial growth and volatility metrics using `LAG()` window functions, returning `NULL` for initial baseline periods.
-- **Q13 (Human Decision #10):** Total revenue aggregation across store, supplier, and product.
-- **Q16:** Market basket analysis utilizing a triangular self-join ($f_1.product\_key < f_2.product\_key$) with `COUNT(DISTINCT transaction_id)` to identify top co-purchased item pairs.
-- **Q17:** Hierarchical multidimensional reporting using `WITH ROLLUP` to display product totals, supplier subtotals, store subtotals, and grand totals.
-- **Q18:** Biannual performance reporting comparing half-year ($H_1, H_2$) and full-year totals.
-- **Q19 (Human Decision #11):** Anomaly and spike detection using CTEs to isolate trading days where daily revenue exceeded twice the product's average daily revenue (evaluated over sales-active days only).
-- **Q20 (Human Decision #12):** Definition of the `STORE_QUARTERLY_SALES` ordinary view without an embedded `ORDER BY`, followed by ordered extraction.
+The SQL script `queries.sql` implements 20 sophisticated analytical queries executed directly against the live warehouse (outputs captured in `query_results.txt` across 137,000+ consolidated transactions):
+
+### 8.1 Empirical Analytical Findings:
+- **Q1 vs. Q11 (Product Performance & Temporal Drill-Down):** 
+  - Q1 isolates the global top-5 revenue generators across the entire year: `REGENCY CAKESTAND 3 TIER` (£10,845.30 in Dec 2010 weekdays, £1,682.10 weekend), `MEDIUM CERAMIC TOP STORAGE JAR` (£77,183.60 in Jan 2011), `WHITE HANGING HEART T-LIGHT HOLDER` (£13,536.30 in Jan 2011), `PARTY BUNTING`, and `POSTAGE`.
+  - Q11 dynamically recalculates the top-5 products for *each individual month*, capturing transient seasonal spikes that global aggregation masks.
+- **Q2, Q3, Q4, Q10 (Demographic & Geographic Segmentation):**
+  - **Q2:** Female customers in City Category C aged 26–35 represent the single highest-spending demographic group, generating **£179,323.68**, followed by Male customers aged 0–17 in City Category A (**£129,146.80**).
+  - **Q3:** Professional segment analysis reveals Clerks generating the highest revenue in Garden supplies (£92,429.92), while Students dominated Home Decor and Jewelry.
+  - **Q10:** Weekday sales consistently generate 4x to 8x the volume of weekend trading across all age demographics.
+- **Q5 & Q8 (Categorical & Geographic Ranking via Window Functions):**
+  - Uses `ROW_NUMBER() OVER (PARTITION BY ... ORDER BY ...)` and `DENSE_RANK()` to rank product sales within each retail department and customer city category without self-joins.
+- **Q7 & Q14 (Customer Loyalty & Seasonality):**
+  - Customers with `0` recorded years of stay in their current city exhibit the highest average transaction values (£44.91 for females), representing high initial relocation basket sizes.
+- **Q9, Q12, Q15 (Financial Velocity & Growth via `LAG()`):**
+  - Monthly and quarterly revenue changes computed using `LAG(revenue, 1) OVER (...)`, properly returning `NULL` for baseline initialization periods without artificial zero distortions.
+- **Q16 (Market Basket Analysis & Product Affinity):**
+  - Implements a triangular self-join on `transaction_id` ($f_1.product\_key < f_2.product\_key$) with `COUNT(DISTINCT transaction_id)` to uncover top co-purchased shopping cart affinities:
+    1. `GREEN REGENCY TEACUP AND SAUCER` & `ROSES REGENCY TEACUP AND SAUCER` (**194 joint purchases**)
+    2. `WHITE HANGING HEART T-LIGHT HOLDER` & `RED HANGING HEART T-LIGHT HOLDER` (**156 joint purchases**)
+    3. `SET OF 6 SPICE TINS PANTRY DESIGN` & `SET OF 3 CAKE TINS PANTRY DESIGN` (**152 joint purchases**)
+    4. `HEART OF WICKER SMALL` & `HEART OF WICKER LARGE` (**149 joint purchases**)
+    5. `GREEN REGENCY TEACUP AND SAUCER` & `PINK REGENCY TEACUP AND SAUCER` (**143 joint purchases**)
+- **Q17 (Hierarchical Rollup Aggregations):**
+  - Uses SQL `WITH ROLLUP` to generate simultaneous product totals, supplier subtotals, regional store subtotals, and the global enterprise grand total in a single scanning pass.
+- **Q19 (Demand Spikes & Anomaly Detection):**
+  - Isolates abnormal trading days where daily product revenue exceeded twice the product's historical daily average (over active trading days only). For example, `INFLATABLE POLITICAL GLOBE` spiked to £102.00 on 2011-04-01 (**5.44x spike ratio** over its £18.76 daily average).
+- **Q20 (Quarterly Store Sales Materialization):**
+  - Compiles the ordinary view `STORE_QUARTERLY_SALES`, detailing revenue and quantity trends across Birmingham Bullring, Edinburgh Princes, London Bridge, Manchester Arndale, and Online Web.
 
 ---
 
