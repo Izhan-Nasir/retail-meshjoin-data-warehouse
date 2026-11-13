@@ -175,7 +175,7 @@ class PeriodicThread(threading.Thread):
         cur.execute(
             """
             SELECT transaction_id, customer_id, product_id, quantity, unit_price,
-                   event_time, sales_mode, processing_mode, store_id
+                   event_time, sales_mode
             FROM periodic_sales_data
             WHERE release_hour = %s AND released = FALSE
             ORDER BY id ASC
@@ -192,6 +192,7 @@ class PeriodicThread(threading.Thread):
         self.conn.commit()
         cur.close()
 
+        import hashlib
         return [
             Transaction(
                 transaction_id=str(r["transaction_id"]),
@@ -201,8 +202,8 @@ class PeriodicThread(threading.Thread):
                 unit_price=float(r["unit_price"]),
                 event_time=r["event_time"],
                 sales_mode=r["sales_mode"],
-                processing_mode=r["processing_mode"],
-                store_id=int(r["store_id"]),
+                processing_mode=r["sales_mode"],
+                store_id=2 + int(hashlib.md5(str(int(r["transaction_id"])).encode("utf-8")).hexdigest()[:8], 16) % 4,
             )
             for r in rows
         ]

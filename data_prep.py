@@ -134,8 +134,8 @@ def stage_periodic(periodic_df, conn) -> int:
     sql = """
         INSERT INTO periodic_sales_data
             (transaction_id, customer_id, product_id, quantity, unit_price,
-             event_time, sales_mode, processing_mode, store_id, release_hour, released)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+             event_time, sales_mode, release_hour, released)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
     batch = []
@@ -149,8 +149,6 @@ def stage_periodic(periodic_df, conn) -> int:
             float(row["unit_price"]),
             row["event_time"].strftime("%Y-%m-%d %H:%M:%S"),
             row["sales_mode"],
-            row["processing_mode"],
-            int(row["store_id"]),
             release_hour,
             False,
         ))
